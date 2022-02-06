@@ -5,7 +5,7 @@
     "private": false,
     "repository": {
         "type": "git",
-        "url": "https://github.com/primefaces/sakai-react.git"
+        "url": "https://github.com/raphacbs/reforcando-fronend.git"
     },
     "license": "MIT",
     "dependencies": {
