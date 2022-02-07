@@ -18,10 +18,10 @@ import Loading from '../components/Loading';
 const ClassroomPage = () => {
     let emptyClassroom = {
         id: null,
-        description: '',
-        startTime: '',
-        endTime: '',
-        createAt: '',
+        description: null,
+        startTime: null,
+        endTime: null,
+        createAt: null,
         active: true
     };
 
@@ -32,6 +32,7 @@ const ClassroomPage = () => {
     const [selectedClassrooms, setSelectedClassrooms] = useState(null);
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [reload, setReload] = useState(false);
     const [loadingPage, setLoadingPage] = useState(false);
 
     const toast = useRef(null);
@@ -43,8 +44,9 @@ const ClassroomPage = () => {
         classroomService.getClassrooms().then(data => {
             setClassrooms(data);
             setLoading(false);
+            setReload(false);
         });
-    }, []);
+    }, [reload]);
 
 
     const saveClassroom = () => {
@@ -55,6 +57,7 @@ const ClassroomPage = () => {
             setLoading(false);
             setClassroomDialog(false);
             toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Turma salva com sucesso!' });
+            setReload(true);
         }).catch(error => {
             toast.current.show({ severity: 'error', summary: 'Falha', detail: error});
 
