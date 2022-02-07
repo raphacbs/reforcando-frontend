@@ -32,6 +32,7 @@ import IconsDemo from './components/IconsDemo';
 import Crud from './pages/Crud';
 import EmptyPage from './pages/EmptyPage';
 import TimelineDemo from './pages/TimelineDemo';
+import ClassroomPage from './pages/ClassroomPage';
 
 import PrimeReact from 'primereact/api';
 import { Tooltip } from 'primereact/tooltip';
@@ -156,6 +157,12 @@ const App = () => {
     }
 
     const menu = [
+        {
+            label: 'Itens',
+            items: [{
+                label: 'Turmas', icon: 'pi pi-fw pi-users', to: '/turmas'
+            }]
+        },
         {
             label: 'Home',
             items: [{
@@ -319,6 +326,7 @@ const App = () => {
                     <Route path="/crud" component={Crud} />
                     <Route path="/empty" component={EmptyPage} />
                     <Route path="/documentation" component={Documentation} />
+                    <Route path="/turmas" component={ClassroomPage} />
                 </div>
 
                 <AppFooter layoutColorMode={layoutColorMode} />
