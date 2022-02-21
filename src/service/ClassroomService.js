@@ -1,17 +1,11 @@
 import axios from 'axios';
 import moment from 'moment';
+import {Settings, env} from './Settings';
 
 export class ClassroomService {
 
-    constructor() {
-        this.BASE_URL = 'https://reforcando-backend.herokuapp.com/api/v1/';
-        // this.BASE_URL = 'http://localhost:8080/api/v1/';
-        this.PATH_URL = 'classrooms';
-        this.CLASSROOM_ENDPOINT = `${this.BASE_URL}${this.PATH_URL}`
-    }
-
     getClassrooms() {
-        return axios.get(this.CLASSROOM_ENDPOINT)
+        return axios.get(Settings.environment[env].baseUrl + Settings.environment.pathUrlClassrooms)
             .then(res => {
                 res.data.forEach(classroom => {
                     classroom.startTime = moment(classroom.startTime, "YYYY-MM-DDTHH:mm:ss.000.00.0").format("HH:mm");
@@ -27,7 +21,8 @@ export class ClassroomService {
         classroom.endTime = moment().set({ h: classroom.endTime.split(":")[0], m: classroom.endTime.split(":")[1] }).format("yyyy-MM-DDTHH:mm:00[.000][.00][.0]");
         classroom.createAt = moment().format("YYYY-MM-DDTHH:mm:ss.000.00.0");
 
-        return axios.post(this.CLASSROOM_ENDPOINT, JSON.stringify(classroom), { headers: { 'Content-Type': 'application/json', 'Accept': '*/*' } })
+        return axios.post(Settings.environment[env].baseUrl + Settings.environment.pathUrlClassrooms,
+            JSON.stringify(classroom), { headers: { 'Content-Type': 'application/json', 'Accept': '*/*' } })
             .then(res => {
                 return res.data;
 

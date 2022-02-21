@@ -12,15 +12,12 @@ import { InputText } from 'primereact/inputtext';
 import { ClassroomService } from '../service/ClassroomService';
 import Loading from '../components/Loading';
 
-
-
-
 const ClassroomPage = () => {
     let emptyClassroom = {
         id: null,
         description: null,
-        startTime: null,
-        endTime: null,
+        startTime: '09:00',
+        endTime: '10:00',
         createAt: null,
         active: true
     };
@@ -59,7 +56,7 @@ const ClassroomPage = () => {
             toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Turma salva com sucesso!' });
             setReload(true);
         }).catch(error => {
-            toast.current.show({ severity: 'error', summary: 'Falha', detail: error});
+            toast.current.show({ severity: 'error', summary: 'Falha', detail: error });
 
         });
 
@@ -111,6 +108,24 @@ const ClassroomPage = () => {
         );
     }
 
+    const startTimeBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">startTime</span>
+                {rowData.startTime}
+            </>
+        );
+    }
+
+    const endTimeBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">endTime</span>
+                {rowData.endTime}
+            </>
+        );
+    }
+
     const onInputChange = (e, name) => {
         const val = (e.target && e.target.value) || '';
         let _classroom = { ...classroom };
@@ -156,10 +171,11 @@ const ClassroomPage = () => {
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Exibindo {first} até {last} de {totalRecords} turmas"
                         globalFilter={globalFilter} emptyMessage="Turma não encontrada." header={header} responsiveLayout="scroll"
-                        loading={loading}
-                    >
-                        <Column field="description" header="Descrição" sortable body={descriptionBodyTemplate} headerStyle={{ width: '80%', minWidth: '10rem' }}></Column>
-                        <Column field="active" header="Status" sortable body={activeBodyTemplate} headerStyle={{ width: '5%', minWidth: '10rem' }}></Column>
+                        loading={loading}>
+                        <Column field="description" header="Descrição" sortable body={descriptionBodyTemplate} headerStyle={{ width: '60%', minWidth: '10rem' }}></Column>
+                        <Column field="startTime" header="Hora de início" sortable body={startTimeBodyTemplate} headerStyle={{ width: '15%', minWidth: '10rem' }}></Column>
+                        <Column field="endTime" header="Hora de término" sortable body={endTimeBodyTemplate} headerStyle={{ width: '15%', minWidth: '10rem' }}></Column>
+                        <Column field="active" header="Status" sortable body={activeBodyTemplate} headerStyle={{ width: '10%', minWidth: '10rem' }}></Column>
                         <Column header="Ação" body={actionBodyTemplate} headerStyle={{ width: '15%', minWidth: '10rem' }}></Column>
                     </DataTable>
 
@@ -185,10 +201,7 @@ const ClassroomPage = () => {
                             <InputSwitch checked={classroom.active} onChange={(e) => onInputChange(e, 'active')} />
                         </div>
                     </Dialog>
-
-
                     <Loading visible={loadingPage}></Loading>
-
                 </div>
             </div>
         </div>
