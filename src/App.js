@@ -8,7 +8,7 @@ import { AppFooter } from './AppFooter';
 import { AppMenu } from './AppMenu';
 import { AppConfig } from './AppConfig';
 
-import Dashboard from './components/Dashboard';
+
 import ClassroomPage from './pages/ClassroomPage';
 import StudentPage from './pages/StudentPage';
 
@@ -139,10 +139,10 @@ const App = () => {
             label: 'Menu',
             items: [
                 {
-                    label: 'Turmas', icon: 'pi pi-fw pi-folder', to: '/turmas'
+                    label: 'Alunos', icon: 'pi pi-fw pi-users', to: '/alunos'
                 },
                 {
-                    label: 'Alunos', icon: 'pi pi-fw pi-users', to: '/alunos'
+                    label: 'Turmas', icon: 'pi pi-fw pi-folder', to: '/turmas'
                 },
             ]
         },
@@ -186,9 +186,9 @@ const App = () => {
 
             <div className="layout-main-container">
                 <div className="layout-main">
-                    <Route path="/" exact render={() => <Dashboard colorMode={layoutColorMode} />} />
-                    <Route path="/turmas" component={ClassroomPage} />
+                    {/* <Route path="/" exact render={() => <Dashboard colorMode={layoutColorMode} />} /> */}
                     <Route path="/alunos" component={StudentPage} />
+                    <Route path="/turmas" component={ClassroomPage} />
                 </div>
 
                 <AppFooter layoutColorMode={layoutColorMode} />

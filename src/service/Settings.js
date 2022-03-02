@@ -1,9 +1,10 @@
-const env = 'dev';
+const env = 'local';
 
 const Settings = {
     environment: {
         pathUrlClassrooms: '/classrooms',
         pathUrlStudent: '/students',
+        pathUrlPaymentEvent: '/payments-events',
         local : {
             baseUrl : 'http://localhost:8080/api/v1',
         },

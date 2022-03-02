@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Settings, env } from './Settings';
 import moment from 'moment';
+import { PaymentEventService } from './PaymentEventService';
 
 
 export class StudentService {
@@ -16,6 +17,14 @@ export class StudentService {
                     console.log(student);
                     student.createAt = moment(student.createAt, "YYYY-MM-DDTHH:mm:ss.sss.ss.s").format("DD/MM/YYYY");
                     student.parent.phoneNumber = student.parent.phoneNumber || "00000000000";
+                    const paymentEventService = new PaymentEventService();
+                    paymentEventService.getByStudentId(student.id).then(data => {
+                       student.paymentEvents = data;
+                    }).catch(error => {
+
+                    });
+
+
                 });
 
                 return res.data

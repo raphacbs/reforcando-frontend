@@ -6,13 +6,13 @@ import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
 import { Toolbar } from 'primereact/toolbar';
 import { InputMask } from 'primereact/inputmask';
-import { InputSwitch } from 'primereact/inputswitch';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { ClassroomService } from '../service/ClassroomService';
 import Loading from '../components/Loading';
 import { Dropdown } from 'primereact/dropdown';
 import { StudentService } from '../service/StudentService';
+import { PaymentEventService } from '../service/PaymentEventService';
 import { Calendar } from 'primereact/calendar';
 import { addLocale } from 'primereact/api';
 
@@ -29,7 +29,7 @@ const StudentPage = () => {
         createAt: "",
         schoolName: "",
         schoolClassroom: "",
-        monthlyFee:0.0,
+        monthlyFee: 0.0,
         parent: {
             name: "",
             lastName: "",
@@ -51,6 +51,7 @@ const StudentPage = () => {
     const [loading, setLoading] = useState(false);
     const [disableAddStudentButton, setDisableAddStudentButton] = useState(true);
     const [showStudentDialog, setShowStudentDialog] = useState(false);
+    const [showPaymentDialog, setShowPaymentDialog] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [loadingPage, setLoadingPage] = useState(false);
     const [classroom, setClassroom] = useState({
@@ -70,7 +71,7 @@ const StudentPage = () => {
         createAt: "",
         schoolName: "",
         schoolClassroom: "",
-        monthlyFee:0.0,
+        monthlyFee: 0.0,
         parent: {
             name: "",
             lastName: "",
@@ -82,6 +83,14 @@ const StudentPage = () => {
             id: 0
         }
     });
+
+    const [paymentEvent, setPaymentEvent] = useState({
+        value: 0.00,
+        reference: new Date(),
+        paymentDate: new Date(),
+        student: null
+    });
+    const [expandedRows, setExpandedRows] = useState(null);
 
 
     const toast = useRef(null);
@@ -114,13 +123,20 @@ const StudentPage = () => {
         setShowStudentDialog(true);
     };
 
+    const [paymentEvents, setPaymentEvents] = useState(null);
+
     const createClassroom = () => {
 
     };
 
-    const hideDialog = () => {
+    const hideStudentDialog = () => {
         setShowStudentDialog(false);
     }
+
+    const hidePaymentDialog = () => {
+        setShowPaymentDialog(false);
+    }
+
 
     const leftToolbarTemplate = () => {
         return (
@@ -178,7 +194,7 @@ const StudentPage = () => {
         return (
             <>
                 <span className="p-column-title">monthlyFee</span>
-                {rowData.monthlyFee.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'})}
+                {rowData.monthlyFee.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' })}
             </>
         );
     }
@@ -208,6 +224,13 @@ const StudentPage = () => {
         let _student = { ...student };
         _student[`${name}`] = val;
         setStudent(_student);
+    }
+
+    const onInputPaymentChange = (e, name) => {
+        const val = (e.target && e.target.value) || '';
+        let _paymentEvent = { ...paymentEvent };
+        _paymentEvent[`${name}`] = val;
+        setPaymentEvent(_paymentEvent);
     }
 
     const setStudentName = (e) => {
@@ -242,12 +265,30 @@ const StudentPage = () => {
         setStudent(_student);
     }
 
+    const setPaymentDate = (e) => {
+        let _paymentEvent = { ...paymentEvent };
+        _paymentEvent.paymentDate = e;
+        setPaymentEvent(_paymentEvent);
+    }
+
     const actionBodyTemplate = (rowData) => {
         return (
             <div className="actions">
-                <Button icon="pi pi-pencil" className="p-button-rounded p-button-success mr-2" />
+                <Button onClick={() => { newPaymentEvent(rowData.id) }} tooltip='Informar pagamento' icon="pi pi-dollar" className="p-button-rounded p-button-success mr-2" />
             </div>
         );
+    }
+
+    const newPaymentEvent = (id) => {
+        const studentSelected = students.find(s => s.id === id);
+        const paymentEvent = {
+            value: studentSelected.monthlyFee,
+            reference: new Date,
+            paymentDate: new Date(),
+            student: { id: studentSelected.id }
+        }
+        setPaymentEvent(paymentEvent);
+        setShowPaymentDialog(true);
     }
 
     const header = (
@@ -277,10 +318,30 @@ const StudentPage = () => {
 
     };
 
+    const savePayment = () => {
+        setLoadingPage(true);
+        const paymentEventService = new PaymentEventService();
+        paymentEventService.savePayment(paymentEvent).then(data => {
+            setLoadingPage(false);
+            setLoading(false);
+            setShowPaymentDialog(false);
+            toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Pagamento confirmado!' });
+        }).catch(error => {
+            toast.current.show({ severity: 'error', summary: 'Falha', detail: error });
+        });
+    }
+
     const studentDialogFooter = (
         <>
-            <Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={hideDialog} />
+            <Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={hideStudentDialog} />
             <Button label="Salvar" icon="pi pi-check" className="p-button-text" onClick={saveStudent} />
+        </>
+    );
+
+    const paymentDialogFooter = (
+        <>
+            <Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={hidePaymentDialog} />
+            <Button label="Salvar" icon="pi pi-check" className="p-button-text" onClick={savePayment} />
         </>
     );
 
@@ -299,12 +360,26 @@ const StudentPage = () => {
         firstDayOfWeek: 1,
         dayNames: ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'],
         dayNamesShort: ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'],
-        dayNamesMin: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
+        dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'],
         monthNames: ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'],
         monthNamesShort: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'sep', 'out', 'nov', 'dez'],
         today: 'Hoje',
         clear: 'Limpar'
     });
+
+    const rowExpansionTemplate = (data) => {
+        return (
+            <DataTable value={data.paymentEvents} responsiveLayout="scroll">
+                <Column field="id" header="Id" sortable></Column>
+                <Column field="paymentDate" header="Pago em" sortable></Column>
+                <Column field="reference" header="Competência" sortable></Column>
+                <Column field="value" header="Valor" sortable></Column>
+            </DataTable>
+        )
+    }
+    const onRowExpand = (event) => {
+        toast.current.show({ severity: 'info', summary: 'Buscando pagamentos', detail: event.data.name, life: 3000 });
+    }
 
 
 
@@ -322,7 +397,13 @@ const StudentPage = () => {
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Exibindo {first} até {last} de {totalRecords} turmas"
                         globalFilter={globalFilter} emptyMessage="Sem dados" header={header} responsiveLayout="scroll"
-                        loading={loading}>
+                        loading={loading}
+                        expandedRows={expandedRows}
+                        onRowToggle={(e) => setExpandedRows(e.data)}
+                        onRowExpand={onRowExpand}
+                        rowExpansionTemplate={rowExpansionTemplate}
+                    >
+                        <Column expander style={{ width: '3em' }} />
                         <Column field="name" header="Nome" body={nameBodyTemplate} sortable headerStyle={{ width: '60%', minWidth: '10rem' }}></Column>
                         <Column field="schoolName" header="Escola" sortable headerStyle={{ width: '60%', minWidth: '10rem' }}></Column>
                         <Column field="schoolClassroom" header="Série" sortable headerStyle={{ width: '60%', minWidth: '10rem' }}></Column>
@@ -334,7 +415,7 @@ const StudentPage = () => {
                         <Column header="Ação" body={actionBodyTemplate} headerStyle={{ width: '15%', minWidth: '10rem' }}></Column>
                     </DataTable>
 
-                    <Dialog visible={showStudentDialog} style={{ width: '450px' }} header="Adicionar aluno" modal className="p-fluid" footer={studentDialogFooter} onHide={hideDialog}>
+                    <Dialog visible={showStudentDialog} style={{ width: '450px' }} header="Adicionar aluno" modal className="p-fluid" footer={studentDialogFooter} onHide={hideStudentDialog}>
                         <div className="field">
                             <label htmlFor="name">Nome Completo</label>
                             <InputText id="name" value={student.fullName} onChange={(e) => setStudentName(e)} required autoFocus className={classNames({ 'p-invalid': submitted && !student.name })} />
@@ -381,6 +462,56 @@ const StudentPage = () => {
                             <InputMask mask="99,99" value={student.monthlyFee} onChange={(e) => onInputChange(e, 'monthlyFee')} required className={classNames({ 'p-invalid': submitted && !student.monthlyFee })}></InputMask>
                             {submitted && !student.monthlyFee && <small className="p-invalid">Valor é obrigatório.</small>}
                         </div>
+                    </Dialog>
+
+
+                    <Dialog visible={showPaymentDialog}
+                        header='Confirmar pagamento do aluno'
+                        modal
+                        className="p-fluid"
+                        footer={paymentDialogFooter}
+                        onHide={hidePaymentDialog}
+
+                    >
+                        <div className="field">
+                            <label htmlFor="value">Valor da mensalidade</label>
+                            <InputMask mask="99,99" value={paymentEvent.value} onChange={(e) => onInputPaymentChange(e, 'value')} required className={classNames({ 'p-invalid': submitted && !student.monthlyFee })}></InputMask>
+                            {submitted && !paymentEvent.value && <small className="p-invalid">Valor é obrigatório.</small>}
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="reference">Referência</label>
+                            <Calendar value={paymentEvent.reference} onChange={(e) => setStudentBirthDate(e.value)}
+                                monthNavigator
+                                yearNavigator
+                                yearRange="2022:2050"
+                                monthNavigatorTemplate={monthNavigatorTemplate}
+                                yearNavigatorTemplate={yearNavigatorTemplate}
+                                dateFormat="mm/yy"
+                                showIcon
+                                mask="99/9999"
+                                locale='pt'
+                            />
+                            {submitted && !paymentEvent.reference && <small className="p-invalid">Mês de referência é obrigatório.</small>}
+                        </div>
+                        <div className="field">
+                            <label htmlFor="paymentDate">Data do pagamento</label>
+                            <Calendar value={paymentEvent.paymentDate} onChange={(e) => setPaymentDate(e.value)}
+                                monthNavigator
+                                yearNavigator
+                                yearRange="2022:2050"
+                                maxDate={new Date()}
+                                monthNavigatorTemplate={monthNavigatorTemplate}
+                                yearNavigatorTemplate={yearNavigatorTemplate}
+                                dateFormat="dd/mm/yy"
+                                showIcon
+                                mask="99/99/9999"
+                                locale='pt'
+                            />
+                            {submitted && !paymentEvent.paymentDate && <small className="p-invalid">Data de pagamento é obrigatória.</small>}
+                        </div>
+
+
                     </Dialog>
                     <Loading visible={loadingPage}></Loading>
                 </div>
