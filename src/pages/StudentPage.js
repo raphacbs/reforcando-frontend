@@ -53,6 +53,8 @@ const StudentPage = () => {
     const [showStudentDialog, setShowStudentDialog] = useState(false);
     const [showPaymentDialog, setShowPaymentDialog] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [disableSaveStudentButton, setDisableSaveStudentButton] = useState(true);
+    const [disableSavePaymentButton, setDisableSavePaymentButton] = useState(true);
     const [loadingPage, setLoadingPage] = useState(false);
     const [classroom, setClassroom] = useState({
         id: null,
@@ -161,7 +163,7 @@ const StudentPage = () => {
         return (
             <React.Fragment>
                 <div className="my-2">
-                    <Button label="Cadastrar Aluno"
+                    <Button
                         icon="pi pi-plus"
                         className="p-button-success mr-2"
                         disabled={disableAddStudentButton}
@@ -224,6 +226,7 @@ const StudentPage = () => {
         let _student = { ...student };
         _student[`${name}`] = val;
         setStudent(_student);
+        studentValidation();
     }
 
     const onInputPaymentChange = (e, name) => {
@@ -231,6 +234,7 @@ const StudentPage = () => {
         let _paymentEvent = { ...paymentEvent };
         _paymentEvent[`${name}`] = val;
         setPaymentEvent(_paymentEvent);
+        paymentEventValidation();
     }
 
     const setStudentName = (e) => {
@@ -241,6 +245,7 @@ const StudentPage = () => {
         _student.fullName = _student.lastName === '' ? _student.name : `${_student.name} ${_student.lastName}`
         _student.fullName = e.nativeEvent.data === ' ' ? _student.fullName + ' ' : _student.fullName;
         setStudent(_student);
+        studentValidation();
     }
 
     const setStudentParentName = (e) => {
@@ -251,24 +256,35 @@ const StudentPage = () => {
         _student.parent.fullName = _student.parent.lastName === '' ? _student.parent.name : `${_student.parent.name} ${_student.parent.lastName}`
         _student.parent.fullName = e.nativeEvent.data === ' ' ? _student.parent.fullName + ' ' : _student.parent.fullName;
         setStudent(_student);
+        studentValidation();
     }
 
     const setStudentParentPhoneNumber = (e) => {
         let val = (e.target && e.target.value) || '';
         let _student = { ...student };
         _student.parent.phoneNumber = val;
+        studentValidation();
     }
 
     const setStudentBirthDate = (e) => {
         let _student = { ...student };
         _student.birthDate = e;
         setStudent(_student);
+        studentValidation();
+    }
+
+    const setPaymentReference = (e) => {
+        let _paymentEvent = { ...paymentEvent };
+        _paymentEvent.reference = e;
+        setPaymentEvent(_paymentEvent);
+        paymentEventValidation();
     }
 
     const setPaymentDate = (e) => {
         let _paymentEvent = { ...paymentEvent };
         _paymentEvent.paymentDate = e;
         setPaymentEvent(_paymentEvent);
+        paymentEventValidation();
     }
 
     const actionBodyTemplate = (rowData) => {
@@ -301,47 +317,69 @@ const StudentPage = () => {
         </div>
     );
 
+    const studentValidation = () =>{
+        const isValid =  !!student.birthDate && !!student.name && !!student.schoolName && !!student.schoolClassroom
+        && !!student.parent.name && !!student.parent.phoneNumber && !!student.monthlyFee;
+        setSubmitted(isValid);
+        setDisableSaveStudentButton(!isValid);
+     }
+
+     const paymentEventValidation = () => {
+        const isValid = !!paymentEvent.value && !!paymentEvent.reference && !!paymentEvent.paymentDate;
+        setSubmitted(isValid);
+        setDisableSavePaymentButton(!isValid);
+     }
+
     const saveStudent = () => {
-        setLoadingPage(true);
-        const studentService = new StudentService();
-        studentService.postStudent(student).then(data => {
-            setLoadingPage(false);
-            setLoading(false);
-            setShowStudentDialog(false);
-            toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Aluno cadastrado com sucesso!' });
-            onChangeClassroom(classroom.id);
-            setStudent(emptyStudent);
-        }).catch(error => {
-            toast.current.show({ severity: 'error', summary: 'Falha', detail: error });
-
-        });
-
+        studentValidation();
+        if(submitted){
+            setLoadingPage(true);
+            const studentService = new StudentService();
+            studentService.postStudent(student).then(data => {
+                setLoadingPage(false);
+                setLoading(false);
+                setShowStudentDialog(false);
+                toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Aluno cadastrado com sucesso!' });
+                onChangeClassroom(classroom.id);
+                setStudent(emptyStudent);
+            }).catch(error => {
+                toast.current.show({ severity: 'error', summary: 'Falha', detail: error });
+            });
+        }
     };
 
     const savePayment = () => {
-        setLoadingPage(true);
-        const paymentEventService = new PaymentEventService();
-        paymentEventService.savePayment(paymentEvent).then(data => {
-            setLoadingPage(false);
-            setLoading(false);
-            setShowPaymentDialog(false);
-            toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Pagamento confirmado!' });
-        }).catch(error => {
-            toast.current.show({ severity: 'error', summary: 'Falha', detail: error });
-        });
+        paymentEventValidation();
+        if(submitted){
+            setLoadingPage(true);
+            const paymentEventService = new PaymentEventService();
+            paymentEventService.savePayment(paymentEvent).then(data => {
+                setLoadingPage(false);
+                setLoading(false);
+                setShowPaymentDialog(false);
+                const studentId = data.student.id;
+                const _students = [...students];
+                _students.find(s=> s.id === studentId).paymentEvents.push(data);
+                setStudents(_students);
+                toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Pagamento confirmado!' });
+            }).catch(error => {
+                toast.current.show({ severity: 'error', summary: 'Falha', detail: error });
+            });
+        }
+
     }
 
     const studentDialogFooter = (
         <>
             <Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={hideStudentDialog} />
-            <Button label="Salvar" icon="pi pi-check" className="p-button-text" onClick={saveStudent} />
+            <Button label="Salvar" icon="pi pi-check" className="p-button-text" onClick={saveStudent} disabled={disableSaveStudentButton} />
         </>
     );
 
     const paymentDialogFooter = (
         <>
             <Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={hidePaymentDialog} />
-            <Button label="Salvar" icon="pi pi-check" className="p-button-text" onClick={savePayment} />
+            <Button label="Salvar" icon="pi pi-check" className="p-button-text" onClick={savePayment} disabled={disableSavePaymentButton} />
         </>
     );
 
@@ -380,6 +418,8 @@ const StudentPage = () => {
     const onRowExpand = (event) => {
         toast.current.show({ severity: 'info', summary: 'Buscando pagamentos', detail: event.data.name, life: 3000 });
     }
+
+
 
 
 
@@ -440,12 +480,12 @@ const StudentPage = () => {
                         <div className="field">
                             <label htmlFor="schoolName">Nome da escola</label>
                             <InputText id="schoolName" value={student.schoolName} onChange={(e) => onInputChange(e, 'schoolName')} required className={classNames({ 'p-invalid': submitted && !student.schoolName })} />
-                            {submitted && !student.name && <small className="p-invalid">Nome da escola é obrigatório.</small>}
+                            {submitted && !student.schoolName && <small className="p-invalid">Nome da escola é obrigatório.</small>}
                         </div>
                         <div className="field">
                             <label htmlFor="schoolClassroom">Série</label>
                             <InputText id="schoolClassroom" value={student.schoolClassroom} onChange={(e) => onInputChange(e, 'schoolClassroom')} required className={classNames({ 'p-invalid': submitted && !student.schoolClassroom })} />
-                            {submitted && !student.name && <small className="p-invalid">Série é obrigatória.</small>}
+                            {submitted && !student.schoolClassroom && <small className="p-invalid">Série é obrigatória.</small>}
                         </div>
                         <div className="field">
                             <label htmlFor="parent.name">Nome do responsável Completo</label>
@@ -455,7 +495,7 @@ const StudentPage = () => {
                         <div className="field">
                             <label htmlFor="parent.phoneNumber">Celular</label>
                             <InputMask mask="(99)999999999" value={student.parent.phoneNumber} onChange={(e) => setStudentParentPhoneNumber(e)} required className={classNames({ 'p-invalid': submitted && !student.parent.phoneNumber })}></InputMask>
-                            {submitted && !student.name && <small className="p-invalid">Celular é obrigatório.</small>}
+                            {submitted && !student.parent.phoneNumber && <small className="p-invalid">Celular é obrigatório.</small>}
                         </div>
                         <div className="field">
                             <label htmlFor="monthlyFee">Valor da mensalidade</label>
@@ -481,7 +521,7 @@ const StudentPage = () => {
 
                         <div className="field">
                             <label htmlFor="reference">Referência</label>
-                            <Calendar value={paymentEvent.reference} onChange={(e) => setStudentBirthDate(e.value)}
+                            <Calendar value={paymentEvent.reference} onChange={(e) => setPaymentReference(e.value)}
                                 monthNavigator
                                 yearNavigator
                                 yearRange="2022:2050"

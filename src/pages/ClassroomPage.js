@@ -81,7 +81,7 @@ const ClassroomPage = () => {
         return (
             <React.Fragment>
                 <div className="my-2">
-                    <Button label="Nova"
+                    <Button
                         icon="pi pi-plus"
                         className="p-button-success mr-2"
                         onClick={() => { createClassroom() }} />

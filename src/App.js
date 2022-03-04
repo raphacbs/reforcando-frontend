@@ -139,7 +139,7 @@ const App = () => {
             label: 'Menu',
             items: [
                 {
-                    label: 'Alunos', icon: 'pi pi-fw pi-users', to: '/alunos'
+                    label: 'Estudantes', icon: 'pi pi-fw pi-users', to: '/alunos'
                 },
                 {
                     label: 'Turmas', icon: 'pi pi-fw pi-folder', to: '/turmas'

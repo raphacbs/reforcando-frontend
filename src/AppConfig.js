@@ -116,7 +116,7 @@ export const AppConfig = (props) => {
 
     return (
         <div ref={config} className={configClassName} id={"layout-config"}>
-            <button className="layout-config-button p-link" id="layout-config-button" onClick={toggleConfigurator}>
+            <button style={{ display: "none" }}  className="layout-config-button p-link" id="layout-config-button" onClick={toggleConfigurator}>
                 <i className="pi pi-cog"></i>
             </button>
             <Button className="p-button-danger layout-config-close p-button-rounded p-button-text" icon="pi pi-times" onClick={hideConfigurator}/>
