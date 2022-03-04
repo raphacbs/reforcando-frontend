@@ -1,4 +1,4 @@
-const env = 'local';
+const env = 'dev';
 
 const Settings = {
     environment: {
